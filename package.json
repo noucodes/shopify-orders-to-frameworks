@@ -4,7 +4,17 @@
   "private": true,
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "setup": "scripts/setup.bat",
+    "setup-code": "scripts/code_setup.bat",
+    "run": "scripts/code_run.bat",
+    "service-install": "scripts/install-service.bat",
+    "service-manage": "scripts/service-manager.bat",
+    "ngrok-setup": "scripts/setup-ngrok.bat",
+    "ngrok-start": "scripts/ngrok-manager.bat start",
+    "ngrok-stop": "scripts/ngrok-manager.bat stop",
+    "ngrok-status": "scripts/ngrok-manager.bat status",
+    "ngrok-test": "scripts/test-ngrok.bat"
   },
   "dependencies": {
     "axios": "^1.6.7",
@@ -15,5 +25,8 @@
     "sqlite3": "^5.1.7",
     "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0"
+  },
+  "devDependencies": {
+    "node-windows": "^1.1.2"
   }
 }
