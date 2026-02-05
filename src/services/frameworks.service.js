@@ -98,7 +98,7 @@ class FrameworksService {
       
       logger.frameworks('Creating sales order in Frameworks ERP...');
       logger.frameworks(`Sales Order URL: ${this.baseUrl}${config.frameworks.endpoints.createSalesOrder}`);
-      logger.frameworks('Payload preview', { 
+      console.log('Payload preview', { 
         payloadSize: JSON.stringify(orderPayload).length,
         customerRef: orderPayload.dsSalesOrder.salesOrder[0].custOrderRef,
         lineItemsCount: orderPayload.dsSalesOrder.salesOrder[0].salesOrderLine.length
@@ -120,6 +120,8 @@ class FrameworksService {
         response: response.data,
         status: response.status
       });
+      console.log('Response data', response.data);
+      console.log('Response status', response.status);
       
       return response.data;
     } catch (error) {

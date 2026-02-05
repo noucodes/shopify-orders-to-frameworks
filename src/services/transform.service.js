@@ -74,7 +74,6 @@ function buildFrameworksPayload(shopifyOrder, store) {
             ? new Date(shopifyOrder.created_at).toISOString().split('T')[0] 
             : null,
           deliverToAddress1: shopifyOrder.shipping_address?.address1 || "123 Shipping Street",
-          state: shopifyOrder.shipping_address?.province || "NSW",
           postCode: shopifyOrder.shipping_address?.zip || "2000",
           zipCode: shopifyOrder.shipping_address?.zip || "2000",
           contactName: shopifyOrder.shipping_address?.name 
@@ -91,13 +90,6 @@ function buildFrameworksPayload(shopifyOrder, store) {
               unitSell: parseFloat(item.price) || null,
               comment: item.name || item.title || null
             };
-
-            // Add discount percentage if available
-            if (item.discount_allocations?.length > 0) {
-              const discountAmount = item.discount_allocations.reduce((sum, d) => sum + parseFloat(d.amount), 0);
-              line.discPerc = Math.round((discountAmount / item.quantity / parseFloat(item.price)) * 100 * 100) / 100;
-            }
-
             return line;
           })
         }
