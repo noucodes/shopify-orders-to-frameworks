@@ -1,0 +1,40 @@
+{
+  "validateOnly": false,
+  "dsSalesOrder": {
+    "salesOrder": [
+      {
+        "idCust": 1043,
+        "custOrderRef": "#BURWEB2537",
+        "despatchMethod": "CPKUP",
+        "refTranExternal": "Mengmeng Dong",
+        "dateOrd": "2026-02-06",
+        "deliverToAddress1": "Mengmeng Dong",
+        "deliverToAddress2": "34A Illuka Crescent",
+        "deliverToAddress3": "Victoria",
+        "postCode": "3149",
+        "zipCode": "3149",
+        "contactName": "Mengmeng Dong",
+        "contactPhone": "0411846664",
+        "contactEmail": "dmm_8868@hotmail.com",
+        "salesOrderLine": [
+          {
+            "lineNo": 1,
+            "idProd": "TOTOTCF33320GAU",
+            "qtyTran": 1,
+            "idUom": "EA",
+            "comment": "TOTO Washlet S2 TOTOTCF33320GAU (D-Shape) (Side Control) Washlet only"
+          },
+          {
+            "lineNo": 2,
+            "idProd": "DISCWEB",
+            "qtyTran": 1,
+            "idUom": "EA",
+            "unitSell": 30,
+            "comment": "Web Order Discount",
+            "priceOverrideReason": "WEB"
+          }
+        ]
+      }
+    ]
+  }
+}

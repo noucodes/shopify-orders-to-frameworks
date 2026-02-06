@@ -62,6 +62,10 @@ module.exports = async function processOrder() {
 };
 
 function buildFrameworksPayload(shopifyOrder, store) {
+  let despatchMethod = "COUR";
+  if (!shopifyOrder.shipping_address) {
+    despatchMethod = "CPKUP";
+  }
   const payload = {
     validateOnly: false,
     dsSalesOrder: {
@@ -69,17 +73,21 @@ function buildFrameworksPayload(shopifyOrder, store) {
         {
           idCust: mapCustomer(store),
           custOrderRef: shopifyOrder.name || shopifyOrder.order_number?.toString() || "SHOPIFY-" + Date.now(),
-          despatchMethod: "COUR",
+          despatchMethod: despatchMethod,
+          refTranExternal: shopifyOrder.billing_address?.name || shopifyOrder.contactName || `${shopifyOrder.customer?.first_name || ''} ${shopifyOrder.customer?.last_name || ''}`.trim() || null,
           dateOrd: shopifyOrder.created_at 
             ? new Date(shopifyOrder.created_at).toISOString().split('T')[0] 
             : null,
-          deliverToAddress1: shopifyOrder.shipping_address?.address1 || "123 Shipping Street",
-          postCode: shopifyOrder.shipping_address?.zip || "2000",
-          zipCode: shopifyOrder.shipping_address?.zip || "2000",
+          deliverToAddress1: shopifyOrder.billing_address?.name|| shopifyOrder.shipping_address?.name || `${shopifyOrder.customer?.first_name || ''} ${shopifyOrder.customer?.last_name || ''}`.trim() 
+            || null,
+          deliverToAddress2: shopifyOrder.billing_address?.address1 || shopifyOrder.shipping_address?.address1 || "123 Shipping Street",
+          deliverToAddress3: shopifyOrder.billing_address?.province || shopifyOrder.shipping_address?.province || null,
+          postCode: shopifyOrder.billing_address?.zip || shopifyOrder.shipping_address?.zip || "2000",
+          zipCode: shopifyOrder.billing_address?.zip || shopifyOrder.shipping_address?.zip || "2000",
           contactName: shopifyOrder.shipping_address?.name 
             || `${shopifyOrder.customer?.first_name || ''} ${shopifyOrder.customer?.last_name || ''}`.trim() 
             || null,
-          contactPhone: shopifyOrder.shipping_address?.phone || shopifyOrder.customer?.phone || null,
+          contactPhone: shopifyOrder.shipping_address?.phone || shopifyOrder.customer?.phone || shopifyOrder.billing_address?.phone ||null,
           contactEmail: shopifyOrder.customer?.email || shopifyOrder.email || null,
           salesOrderLine: shopifyOrder.line_items.map((item, index) => {
             const line = {
@@ -87,15 +95,39 @@ function buildFrameworksPayload(shopifyOrder, store) {
               idProd: item.sku || item.variant_id?.toString() || item.product_id?.toString() || "",
               qtyTran: item.quantity,
               idUom: "EA", // Default Unit of Measure
-              unitSell: parseFloat(item.price) || null,
               comment: item.name || item.title || null
             };
+
+            // Add discount percentage if available
+            // if (item.discount_allocations?.length > 0) {
+            //   const discountAmount = item.discount_allocations.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+            //   line.discPerc = Math.round((discountAmount / item.quantity / parseFloat(item.price)) * 100 * 100) / 100;
+            // }
+            
             return line;
           })
         }
       ]
     }
   };
+
+  // Add discount line item for burdens orders if total discount exists
+  if (shopifyOrder.total_discounts && parseFloat(shopifyOrder.total_discounts) > 0 && store === 'burdens') {
+    const discountAmount = parseFloat(shopifyOrder.total_discounts);
+    const nextLineNo = payload.dsSalesOrder.salesOrder[0].salesOrderLine.length + 1;
+    
+    payload.dsSalesOrder.salesOrder[0].salesOrderLine.push({
+      lineNo: nextLineNo,
+      idProd: "DISCWEB",
+      qtyTran: 1,
+      idUom: "EA",
+      unitSell: discountAmount, // Positive amount as required by Frameworks
+      comment: "Web Order Discount",
+      priceOverrideReason:"WEB"
+    });
+    
+    logger.processing(`Added discount line item: $${discountAmount.toFixed(2)} for burdens order with price override reason: WEB`);
+  }
 
   // Add instructions only if they exist
   if (shopifyOrder.note) {
@@ -117,3 +149,6 @@ function mapCustomer(store) {
   logger.processing(`Mapping customer for store: ${store} -> ID: ${customerId}`);
   return customerId;
 }
+
+// Export the buildFrameworksPayload function for use in debug tools
+module.exports.buildFrameworksPayload = buildFrameworksPayload;

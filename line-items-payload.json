@@ -1,0 +1,20 @@
+{
+  "salesOrderLines": [
+    {
+      "lineNo": 1,
+      "idProd": "TOTOTCF33320GAU",
+      "qtyTran": 1,
+      "idUom": "EA",
+      "comment": "TOTO Washlet S2 TOTOTCF33320GAU (D-Shape) (Side Control) Washlet only"
+    },
+    {
+      "lineNo": 2,
+      "idProd": "DISCWEB",
+      "qtyTran": 1,
+      "idUom": "EA",
+      "unitSell": 30,
+      "comment": "Web Order Discount",
+      "priceOverrideReason": "WEB"
+    }
+  ]
+}

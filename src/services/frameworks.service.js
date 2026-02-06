@@ -116,10 +116,28 @@ class FrameworksService {
         }
       );
 
+      if (response.data.hasErrors) {
+        const errorMessage = response.data.errorTable?.length > 0 
+          ? response.data.errorTable.map(err => err.msg).join('; ')
+          : 'Unknown Frameworks API error';
+        
+        logger.orderError('Sales order creation failed', {
+          error: errorMessage,
+          response: response.data,
+          status: response.status,
+          customerRef: orderPayload.dsSalesOrder.salesOrder[0].custOrderRef,
+          errorTable: response.data.errorTable
+        });
+        
+        // Throw error so transform service can handle it
+        throw new Error(`Frameworks API error: ${errorMessage}`);
+      } else {
+
       logger.frameworks('Sales order created successfully', { 
         response: response.data,
         status: response.status
       });
+    }
       console.log('Response data', response.data);
       console.log('Response status', response.status);
       
