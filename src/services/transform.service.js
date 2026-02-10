@@ -74,6 +74,7 @@ function buildFrameworksPayload(shopifyOrder, store) {
           idCust: mapCustomer(store),
           custOrderRef: shopifyOrder.name || shopifyOrder.order_number?.toString() || "SHOPIFY-" + Date.now(),
           despatchMethod: despatchMethod,
+          idBranch: 8,
           refTranExternal: shopifyOrder.billing_address?.name || shopifyOrder.contactName || `${shopifyOrder.customer?.first_name || ''} ${shopifyOrder.customer?.last_name || ''}`.trim() || null,
           dateOrd: shopifyOrder.created_at 
             ? new Date(shopifyOrder.created_at).toISOString().split('T')[0] 
@@ -81,7 +82,7 @@ function buildFrameworksPayload(shopifyOrder, store) {
           deliverToAddress1: shopifyOrder.billing_address?.name|| shopifyOrder.shipping_address?.name || `${shopifyOrder.customer?.first_name || ''} ${shopifyOrder.customer?.last_name || ''}`.trim() 
             || null,
           deliverToAddress2: shopifyOrder.billing_address?.address1 || shopifyOrder.shipping_address?.address1 || "123 Shipping Street",
-          deliverToAddress3: shopifyOrder.billing_address?.province || shopifyOrder.shipping_address?.province || null,
+          deliverToAddress3: shopifyOrder.billing_address?.city || shopifyOrder.shipping_address?.city || null,
           postCode: shopifyOrder.billing_address?.zip || shopifyOrder.shipping_address?.zip || "2000",
           zipCode: shopifyOrder.billing_address?.zip || shopifyOrder.shipping_address?.zip || "2000",
           contactName: shopifyOrder.shipping_address?.name 
@@ -89,14 +90,21 @@ function buildFrameworksPayload(shopifyOrder, store) {
             || null,
           contactPhone: shopifyOrder.shipping_address?.phone || shopifyOrder.customer?.phone || shopifyOrder.billing_address?.phone ||null,
           contactEmail: shopifyOrder.customer?.email || shopifyOrder.email || null,
+          deliveryFee: shopifyOrder.total_shipping_price_set?.shop_money?.amount || shopifyOrder.current_shipping_price_set?.shop_money?.amount || 0,
           salesOrderLine: shopifyOrder.line_items.map((item, index) => {
+            const gst = Math.round(item.tax_lines[0]?.price / item.quantity * 100) / 100;
+            const unitSell = Math.round((item.price - gst) * 100) / 100;
             const line = {
               lineNo: index + 1,
               idProd: item.sku || item.variant_id?.toString() || item.product_id?.toString() || "",
               qtyTran: item.quantity,
+              unitSell: unitSell,
               idUom: "EA", // Default Unit of Measure
-              comment: item.name || item.title || null
+              comment: item.name || item.title || null,
+              priceOverrideReason: "Shopify"
             };
+
+
 
             // Add discount percentage if available
             // if (item.discount_allocations?.length > 0) {
@@ -119,7 +127,7 @@ function buildFrameworksPayload(shopifyOrder, store) {
     payload.dsSalesOrder.salesOrder[0].salesOrderLine.push({
       lineNo: nextLineNo,
       idProd: "DISCWEB",
-      qtyTran: 1,
+      qtyTran: -1,
       idUom: "EA",
       unitSell: discountAmount, // Positive amount as required by Frameworks
       comment: "Web Order Discount",

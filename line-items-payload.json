@@ -2,19 +2,30 @@
   "salesOrderLines": [
     {
       "lineNo": 1,
-      "idProd": "TOTOTCF33320GAU",
-      "qtyTran": 1,
+      "idProd": "MWW0034",
+      "qtyTran": 5,
+      "unitSell": 14.54,
       "idUom": "EA",
-      "comment": "TOTO Washlet S2 TOTOTCF33320GAU (D-Shape) (Side Control) Washlet only"
+      "comment": "Mr. Wet Wall 10Mm End Cap Trim 2400Mm  White",
+      "priceOverrideReason": "Shopify"
     },
     {
       "lineNo": 2,
-      "idProd": "DISCWEB",
+      "idProd": "MWW0044",
       "qtyTran": 1,
+      "unitSell": 14.54,
       "idUom": "EA",
-      "unitSell": 30,
-      "comment": "Web Order Discount",
-      "priceOverrideReason": "WEB"
+      "comment": "Mr. Wet Wall 10Mm Internal Trim 2400Mm White",
+      "priceOverrideReason": "Shopify"
+    },
+    {
+      "lineNo": 3,
+      "idProd": "MWW0003",
+      "qtyTran": 3,
+      "unitSell": 199.95,
+      "idUom": "EA",
+      "comment": "Mr Wet Wall White Carrara Marble Gloss Wall Panel 2400X1000X10Mm Wwaus001",
+      "priceOverrideReason": "Shopify"
     }
   ]
 }
