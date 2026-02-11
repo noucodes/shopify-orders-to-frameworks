@@ -11,6 +11,61 @@ module.exports = function startServer() {
     }
   }));
 
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    const health = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development',
+      port: process.env.PORT,
+      memory: {
+        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024 * 100) / 100,
+        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024 * 100) / 100,
+        external: Math.round(process.memoryUsage().external / 1024 / 1024 * 100) / 100
+      },
+      version: require('../package.json').version
+    };
+
+    // Check if we can access the database (basic check)
+    try {
+      const db = require('./db/sqlite');
+      // Simple database connectivity check
+      db.get('SELECT 1 as test', [], (err, row) => {
+        if (err) {
+          health.status = 'unhealthy';
+          health.database = 'disconnected';
+          health.error = err.message;
+          logger.error('Health check failed - database error', { error: err.message });
+          return res.status(503).json(health);
+        }
+        
+        health.database = 'connected';
+        logger.info('Health check passed', { status: health.status });
+        res.status(200).json(health);
+      });
+    } catch (error) {
+      health.status = 'unhealthy';
+      health.database = 'error';
+      health.error = error.message;
+      logger.error('Health check failed - database module error', { error: error.message });
+      res.status(503).json(health);
+    }
+  });
+
+  // Root endpoint for basic info
+  app.get('/', (req, res) => {
+    res.json({
+      service: 'Shopify to Frameworks Connector',
+      status: 'running',
+      version: require('../package.json').version,
+      endpoints: {
+        health: '/health',
+        webhooks: '/webhooks/{store}/orders-create'
+      }
+    });
+  });
+
   app.use('/webhooks', webhookRoutes);
 
   const server = app.listen(process.env.PORT, () => {
