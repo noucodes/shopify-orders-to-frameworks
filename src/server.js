@@ -28,38 +28,63 @@ module.exports = function startServer() {
       database: process.env.DATABASE_URL ? 'postgresql' : 'sqlite'
     };
 
-    // For cloud databases, just check if environment variables are set
-    if (process.env.DATABASE_URL) {
-      // PostgreSQL/Cloud database - assume healthy if env vars exist
-      health.database = 'connected';
-      health.database_type = 'postgresql';
-      logger.info('Health check passed - cloud database configured', { status: health.status });
-      res.status(200).json(health);
-    } else {
-      // SQLite/Local database - do actual connectivity check
-      try {
-        const db = require('./db/sqlite');
-        db.get('SELECT 1 as test', [], (err, row) => {
-          if (err) {
-            health.status = 'unhealthy';
-            health.database = 'disconnected';
-            health.error = err.message;
-            logger.error('Health check failed - database error', { error: err.message });
-            return res.status(503).json(health);
-          }
-          
-          health.database = 'connected';
-          health.database_type = 'sqlite';
-          logger.info('Health check passed', { status: health.status });
-          res.status(200).json(health);
+    logger.info('Health check passed', { status: health.status });
+    res.status(200).json(health);
+  });
+
+  // Deep health check endpoint with actual database connectivity
+  app.get('/health/deep', async (req, res) => {
+    try {
+      if (process.env.DATABASE_URL) {
+        // PostgreSQL/Cloud database - actual connection test
+        const { Pool } = require('pg');
+        const pool = new Pool({
+          connectionString: process.env.DATABASE_URL,
+          max: 1,
+          connectionTimeoutMillis: 5000,
         });
-      } catch (error) {
-        health.status = 'unhealthy';
-        health.database = 'error';
-        health.error = error.message;
-        logger.error('Health check failed - database module error', { error: error.message });
-        res.status(503).json(health);
+        
+        const client = await pool.connect();
+        try {
+          const result = await client.query('SELECT 1 as test, NOW() as timestamp');
+          await client.query('SELECT COUNT(*) as order_count FROM orders LIMIT 1');
+        } finally {
+          client.release();
+          await pool.end();
+        }
+        
+        res.status(200).json({ 
+          status: 'healthy', 
+          database: 'connected',
+          database_type: 'postgresql',
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        // SQLite/Local database - actual connection test
+        const db = require('./db/sqlite');
+        
+        await new Promise((resolve, reject) => {
+          db.get('SELECT 1 as test, datetime("now") as timestamp', [], (err, row) => {
+            if (err) return reject(err);
+            resolve(row);
+          });
+        });
+        
+        res.status(200).json({ 
+          status: 'healthy', 
+          database: 'connected',
+          database_type: 'sqlite',
+          timestamp: new Date().toISOString()
+        });
       }
+    } catch (err) {
+      logger.error('Deep health check failed', { error: err.message });
+      res.status(503).json({ 
+        status: 'unhealthy', 
+        database: 'disconnected',
+        error: err.message,
+        timestamp: new Date().toISOString()
+      });
     }
   });
 
