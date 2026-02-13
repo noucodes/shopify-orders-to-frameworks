@@ -79,12 +79,12 @@ function buildFrameworksPayload(shopifyOrder, store) {
           dateOrd: shopifyOrder.created_at 
             ? new Date(shopifyOrder.created_at).toISOString().split('T')[0] 
             : null,
-          deliverToAddress1: shopifyOrder.billing_address?.name|| shopifyOrder.shipping_address?.name || `${shopifyOrder.customer?.first_name || ''} ${shopifyOrder.customer?.last_name || ''}`.trim() 
+          deliverToAddress1: shopifyOrder.shipping_address?.name|| shopifyOrder.billing_address?.name || `${shopifyOrder.customer?.first_name || ''} ${shopifyOrder.customer?.last_name || ''}`.trim() 
             || null,
-          deliverToAddress2: shopifyOrder.billing_address?.address1 || shopifyOrder.shipping_address?.address1 || "123 Shipping Street",
-          deliverToAddress3: shopifyOrder.billing_address?.city || shopifyOrder.shipping_address?.city || null,
-          postCode: shopifyOrder.billing_address?.zip || shopifyOrder.shipping_address?.zip || "2000",
-          zipCode: shopifyOrder.billing_address?.zip || shopifyOrder.shipping_address?.zip || "2000",
+          deliverToAddress2: shopifyOrder.shipping_address?.address1 || shopifyOrder.billing_address?.address1 || "123 Shipping Street",
+          deliverToAddress3: shopifyOrder.shipping_address?.city || shopifyOrder.billing_address?.city || null,
+          postCode: shopifyOrder.shipping_address?.zip || shopifyOrder.billing_address?.zip || "2000",
+          zipCode: shopifyOrder.shipping_address?.zip || shopifyOrder.billing_address?.zip || "2000",
           contactName: shopifyOrder.shipping_address?.name 
             || `${shopifyOrder.customer?.first_name || ''} ${shopifyOrder.customer?.last_name || ''}`.trim() 
             || null,
