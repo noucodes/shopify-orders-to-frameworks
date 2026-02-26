@@ -1,6 +1,7 @@
 const DiscordService = require('./discord.service');
 const TeamsService = require('./teams.service');
 const logger = require('../../config/logger');
+const config = require('../../config/env');
 
 class WebhookService {
   constructor() {
@@ -10,10 +11,10 @@ class WebhookService {
   }
 
   getEnabledChannels() {
-    const discordEnabled = process.env.DISCORD_WEBHOOK_URL && 
-                         process.env.DISCORD_WEBHOOK_URL !== 'YOUR_DISCORD_WEBHOOK_URL_HERE';
-    const teamsEnabled = process.env.TEAMS_WEBHOOK_URL && 
-                       process.env.TEAMS_WEBHOOK_URL !== 'YOUR_TEAMS_WEBHOOK_URL_HERE';
+    const discordEnabled = this.discord.webhookUrl && 
+                         this.discord.webhookUrl !== 'YOUR_DISCORD_WEBHOOK_URL_HERE';
+    const teamsEnabled = this.teams.webhookUrl && 
+                       this.teams.webhookUrl !== 'YOUR_TEAMS_WEBHOOK_URL_HERE';
     
     return {
       discord: discordEnabled,

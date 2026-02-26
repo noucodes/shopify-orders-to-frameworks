@@ -1,10 +1,12 @@
 const axios = require('axios');
 const logger = require('../../config/logger');
+const config = require('../../config/env');
 
 class TeamsService {
   constructor() {
-    this.webhookUrl = process.env.TEAMS_WEBHOOK_URL;
-    this.integrationName = process.env.INTEGRATION_NAME || 'Shopify Connector';
+    this.webhookConfig = config.webhook.teams;
+    this.webhookUrl = this.webhookConfig.url;
+    this.integrationName = this.webhookConfig.name;
   }
 
   async sendMessage(message, isError = false) {
@@ -66,12 +68,12 @@ class TeamsService {
         ]
       };
 
-      await axios.post(this.webhookUrl, payload, {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        timeout: 10000
-      });
+    await axios.post(this.webhookUrl, payload, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      timeout: 10000
+    });
 
       logger.info('Teams notification sent successfully', { isError });
     } catch (error) {
@@ -92,6 +94,69 @@ class TeamsService {
         return;
       }
 
+      const body = [
+        {
+          type: 'TextBlock',
+          text: `📦 Order Processing ${status.toUpperCase()}`,
+          weight: 'Bolder',
+          size: 'Medium',
+          color: color
+        },
+        {
+          type: 'TextBlock',
+          text: `Order ${orderData.orderNumber || 'Unknown'} from ${orderData.store || 'Unknown store'}`,
+          wrap: true,
+          color: 'Default'
+        },
+        
+        {
+          type: 'FactSet',
+          facts: [
+            {
+              title: 'Order ID',
+              value: orderData.shopifyOrderId || 'N/A'
+            },
+            {
+              title: 'Store',
+              value: orderData.store || 'N/A'
+            },
+            {
+              title: 'Environment',
+              value: process.env.NODE_ENV || 'development'
+            }
+          ]
+        }
+      ];
+
+      // Add error details if present
+      if (orderData.error) {
+        body.push({
+          type: 'TextBlock',
+          text: 'Error Details:',
+          weight: 'Bolder',
+          color: 'Attention',
+          spacing: 'Medium'
+        });
+        body.push({
+          type: 'TextBlock',
+          text: `\`\`\`${orderData.error}\`\`\``,
+          wrap: true,
+          color: 'Default'
+        });
+      }
+
+      body.push({
+        type: 'TextBlock',
+        text: `🕐 ${new Date().toLocaleString('en-US', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+          timeZone: 'Australia/Sydney'
+        })}`,
+        size: 'Small',
+        isSubtle: true,
+        spacing: 'Medium'
+      });
+
       const payload = {
         type: 'message',
         attachments: [
@@ -101,87 +166,7 @@ class TeamsService {
               $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
               type: 'AdaptiveCard',
               version: '1.4',
-              body: [
-                {
-                  type: 'TextBlock',
-                  text: `📦 Order Processing ${status.toUpperCase()}`,
-                  weight: 'Bolder',
-                  size: 'Medium',
-                  color: color
-                },
-                {
-                  type: 'TextBlock',
-                  text: `Order ${orderData.orderNumber || 'Unknown'} from ${orderData.store || 'Unknown store'}`,
-                  wrap: true,
-                  color: 'Default'
-                },
-                {
-                  type: 'ColumnSet',
-                  columns: [
-                    {
-                      type: 'Column',
-                      width: 'stretch',
-                      items: [
-                        {
-                          type: 'FactSet',
-                          facts: [
-                            {
-                              title: 'Order ID',
-                              value: orderData.shopifyOrderId || 'N/A'
-                            },
-                            {
-                              title: 'Store',
-                              value: orderData.store || 'N/A'
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      type: 'Column',
-                      width: 'stretch',
-                      items: [
-                        {
-                          type: 'FactSet',
-                          facts: [
-                            {
-                              title: 'Status',
-                              value: status.toUpperCase()
-                            },
-                            {
-                              title: 'Environment',
-                              value: process.env.NODE_ENV || 'development'
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                ...(orderData.error ? [{
-                  type: 'TextBlock',
-                  text: 'Error Details:',
-                  weight: 'Bolder',
-                  color: 'Attention',
-                  spacing: 'Medium'
-                }, {
-                  type: 'TextBlock',
-                  text: `\`\`\`${orderData.error}\`\`\``,
-                  wrap: true,
-                  color: 'Default'
-                }] : []),
-                {
-                  type: 'TextBlock',
-                  text: `🕐 ${new Date().toLocaleString('en-US', {
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                    timeZone: 'Australia/Sydney'
-                  })}`,
-                  size: 'Small',
-                  isSubtle: true,
-                  spacing: 'Medium'
-                }
-              ]
+              body: body
             }
           }
         ]
@@ -201,7 +186,9 @@ class TeamsService {
     } catch (error) {
       logger.error('Failed to send Teams order notification', { 
         error: error.message,
-        orderId: orderData.shopifyOrderId 
+        stack: error.stack,
+        orderId: orderData.shopifyOrderId,
+        status: status
       });
     }
   }

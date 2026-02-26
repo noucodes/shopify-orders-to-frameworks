@@ -44,7 +44,8 @@ module.exports = async function processOrder() {
         shopifyOrderId: order.shopify_order_id,
         orderNumber: shopifyOrder.name || shopifyOrder.order_number,
         store: order.store,
-        error: null
+        error: null,
+        payload: payload // Add Frameworks payload for debugging
       }, 'success');
     } catch (processingError) {
       logger.orderError(`Failed to process order ${order.id}: ${processingError.message}`, { 
@@ -67,7 +68,8 @@ module.exports = async function processOrder() {
         shopifyOrderId: order.shopify_order_id,
         orderNumber: shopifyOrder.name || shopifyOrder.order_number,
         store: order.store,
-        error: processingError.message
+        error: processingError.message,
+        payload: payload // Add Frameworks payload for debugging
       }, 'error');
     }
   } catch (dbError) {

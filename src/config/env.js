@@ -23,5 +23,20 @@ module.exports = {
       createSalesOrder: '/salesorder/create'
     }
   },
-  
+
+  // Webhook Configuration
+  webhook: {
+    discord: {
+      url: process.env.NODE_ENV === 'development' 
+        ? process.env.TEST_DISCORD_WEBHOOK_URL 
+        : process.env.DISCORD_WEBHOOK_URL,
+      name: process.env.INTEGRATION_NAME || 'Shopify Connector'
+    },
+    teams: {
+      url: process.env.NODE_ENV === 'development' 
+        ? process.env.TEST_TEAMS_WEBHOOK_URL 
+        : process.env.TEAMS_WEBHOOK_URL,
+      name: process.env.INTEGRATION_NAME || 'Shopify Connector'
+    }
+  }
 };
